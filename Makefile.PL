@@ -22,4 +22,6 @@ makemaker_args(
     dist => { PREOP => 'pod2text lib/B/Hooks/OP/PPAddr.pm > $(DISTVNAME)/README' },
 );
 
+extra_tests;
+
 WriteAll;
