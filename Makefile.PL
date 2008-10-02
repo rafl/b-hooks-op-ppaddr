@@ -17,6 +17,9 @@ $pkg->add_pm('lib/B/Hooks/OP/PPAddr.pm' => '$(INST_LIB)/B/Hooks/OP/PPAddr.pm');
 mkdir 'build';
 $pkg->save_config('build/IFiles.pm');
 
-makemaker_args($pkg->get_makefile_vars);
+makemaker_args(
+    $pkg->get_makefile_vars,
+    dist => { PREOP => 'pod2text lib/B/Hooks/OP/PPAddr.pm > $(DISTVNAME)/README' },
+);
 
 WriteAll;
