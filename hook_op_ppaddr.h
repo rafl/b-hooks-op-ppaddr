@@ -3,6 +3,7 @@
 
 #include "perl.h"
 
-PERL_XS_EXPORT_C void hook_op_ppaddr (opcode type, Perl_ppaddr_t cb);
+typedef OP *(CPERLscope(*hook_op_callback_t)) (pTHX_ OP *);
+PERL_XS_EXPORT_C void hook_op_ppaddr (opcode type, hook_op_callback_t cb);
 
 #endif

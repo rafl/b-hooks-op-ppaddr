@@ -40,15 +40,15 @@ ppaddr_cb (pTHX) {
 			continue;
 		}
 
-		Perl_ppaddr_t cb = (Perl_ppaddr_t)SvUV (*hook);
-		CALL_FPTR (cb)(aTHX);
+		hook_op_callback_t cb = (hook_op_callback_t)SvUV (*hook);
+		ret = CALL_FPTR (cb)(aTHX_ ret);
 	}
 
 	return ret;
 }
 
 void
-hook_op_ppaddr (opcode type, Perl_ppaddr_t cb) {
+hook_op_ppaddr (opcode type, hook_op_callback_t cb) {
 	AV *hooks;
 
 	if (!initialized) {
