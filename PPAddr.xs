@@ -2,70 +2,88 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "ppport.h"
+#include "ptable.h"
+
 #include "hook_op_ppaddr.h"
 
-STATIC Perl_ppaddr_t orig_PL_ppaddr[OP_max];
-STATIC AV *ppaddr_cbs[OP_max];
+typedef struct userdata_St {
+	hook_op_ppaddr_cb_t cb;
+	void *ud;
+} userdata_t;
 
-#define run_orig_ppaddr(type) (CALL_FPTR (orig_PL_ppaddr[(type)])(aTHX))
+typedef struct around_userdata_St {
+	hook_op_ppaddr_cb_t before;
+	hook_op_ppaddr_cb_t after;
+	Perl_ppaddr_t orig;
+	void *ud;
+} around_userdata_t;
 
-STATIC UV initialized = 0;
-
-STATIC void
-setup () {
-	if (initialized) {
-		return;
-	}
-
-	initialized = 1;
-
-	Copy (PL_ppaddr, orig_PL_ppaddr, OP_max, Perl_ppaddr_t);
-	Zero (ppaddr_cbs, OP_max, AV *);
-}
+STATIC PTABLE_t *op_map = NULL;
 
 STATIC OP *
 ppaddr_cb (pTHX) {
-	I32 i;
-	AV *hooks = ppaddr_cbs[PL_op->op_type];
-	OP *ret = run_orig_ppaddr (PL_op->op_type);
+	userdata_t *ud = (userdata_t *)PTABLE_fetch(op_map, PL_op);
+	return CALL_FPTR (ud->cb) (aTHX_ PL_op, ud->ud);
+}
 
-	if (!hooks) {
-		return ret;
+void
+hook_op_ppaddr (OP *op, hook_op_ppaddr_cb_t cb, void *user_data) {
+	userdata_t *ud;
+
+	Newx (ud, 1, userdata_t);
+	ud->cb = cb;
+	ud->ud = user_data;
+
+	PTABLE_store (op_map, op, ud);
+	op->op_ppaddr = ppaddr_cb;
+}
+
+STATIC OP *
+ppaddr_around_cb (pTHX_ OP *op, void *user_data) {
+	OP *ret = op;
+	around_userdata_t *ud = (around_userdata_t *)user_data;
+
+	if (ud->before) {
+		ret = CALL_FPTR (ud->before) (aTHX_ ret, ud->ud);
 	}
 
-	for (i = 0; i <= av_len (hooks); i++) {
-		SV **hook = av_fetch (hooks, i, 0);
+	PL_op = ret;
+	ret = CALL_FPTR (ud->orig) (aTHX);
 
-		if (!hook || !*hook) {
-			continue;
-		}
-
-		hook_op_callback_t cb = (hook_op_callback_t)SvUV (*hook);
-		ret = CALL_FPTR (cb)(aTHX_ ret);
+	if (ud->after) {
+		ret = CALL_FPTR (ud->after) (aTHX_ ret, ud->ud);
 	}
 
 	return ret;
 }
 
 void
-hook_op_ppaddr (opcode type, hook_op_callback_t cb) {
-	AV *hooks;
+hook_op_ppaddr_around (OP *op, hook_op_ppaddr_cb_t before,
+                       hook_op_ppaddr_cb_t after, void *user_data) {
+	around_userdata_t *ud;
 
-	if (!initialized) {
-		setup ();
-	}
+	Newx (ud, 1, around_userdata_t);
+	ud->before = before;
+	ud->after = after;
+	ud->orig = op->op_ppaddr;
+	ud->ud = user_data;
 
-	hooks = ppaddr_cbs[type];
-
-	if (!hooks) {
-		hooks = newAV ();
-		ppaddr_cbs[type] = hooks;
-		PL_ppaddr[type] = ppaddr_cb;
-	}
-
-	av_push (hooks, newSVuv ((UV)cb));
+	hook_op_ppaddr (op, ppaddr_around_cb, ud);
 }
 
 MODULE = B::Hooks::OP::PPAddr  PACKAGE = B::Hooks::OP::PPAddr
 
 PROTOTYPES: DISABLE
+
+void
+END ()
+	CODE:
+		PTABLE_free (op_map);
+
+BOOT:
+	op_map = PTABLE_new ();
+
+	if (!op_map) {
+		croak ("can't initialize op map");
+	}
