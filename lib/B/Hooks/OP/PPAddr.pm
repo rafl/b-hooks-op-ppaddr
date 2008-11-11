@@ -59,17 +59,17 @@ Type that callbacks need to implement.
 
 =head1 FUNCTIONS
 
-=head1 void hook_op_ppaddr (OP *op, hook_op_ppaddr_cb_t cb, void *user_data)
+=head2 void hook_op_ppaddr (OP *op, hook_op_ppaddr_cb_t cb, void *user_data)
 
 Replace the function to execute C<op> with the callback C<cb>. C<user_data>
 will be passed to the callback as the last argument.
 
-=head1 void hook_op_ppaddr_around (OP *op, hook_op_ppaddr_cb_t before, hook_op_ppaddr_cb_t after, void *user_data)
+=head2 void hook_op_ppaddr_around (OP *op, hook_op_ppaddr_cb_t before, hook_op_ppaddr_cb_t after, void *user_data)
 
 Register the callbacks C<before> and C<after> to be called before and after the
 execution of C<op>. C<user_data> will be passed to the callback as the last
 argument.
- 
+
 =head1 AUTHOR
 
 Florian Ragwitz E<lt>rafl@debian.orgE<gt>
