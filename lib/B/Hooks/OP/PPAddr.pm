@@ -49,7 +49,7 @@ use. Include the following in your Makefile.PL:
         $pkg->get_makefile_vars,
     );
 
-Your XS module can now include C<hook_op_check.h>.
+Your XS module can now include C<hook_op_ppaddr.h>.
 
 =head1 TYPES
 
