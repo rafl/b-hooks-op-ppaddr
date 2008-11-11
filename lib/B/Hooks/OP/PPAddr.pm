@@ -70,6 +70,10 @@ Register the callbacks C<before> and C<after> to be called before and after the
 execution of C<op>. C<user_data> will be passed to the callback as the last
 argument.
 
+=head1 SEE ALSO
+
+L<B::Hooks::OP::Check>
+
 =head1 AUTHOR
 
 Florian Ragwitz E<lt>rafl@debian.orgE<gt>
