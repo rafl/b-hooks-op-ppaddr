@@ -14,6 +14,7 @@ __PACKAGE__->bootstrap($VERSION);
 1;
 
 __END__
+
 =head1 NAME
 
 B::Hooks::OP::PPAddr - Hook into opcode execution
