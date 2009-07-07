@@ -1,11 +1,13 @@
 use 5.006; #due to use warnings
 use strict;
 use warnings;
-use inc::Module::Install;
+use inc::Module::Install 0.75;
 use ExtUtils::Depends 0.302;
 
 name 'B-Hooks-OP-PPAddr';
 all_from 'lib/B/Hooks/OP/PPAddr.pm';
+
+repository 'git://github.com/rafl/b-hooks-op-ppaddr.git';
 
 requires 'parent';
 configure_requires 'ExtUtils::Depends' => 0.302; #minimum version that works on Win32+gcc
