@@ -1,13 +1,14 @@
+use 5.006; #due to use warnings
 use strict;
 use warnings;
 use inc::Module::Install;
-use ExtUtils::Depends;
+use ExtUtils::Depends 0.302;
 
 name 'B-Hooks-OP-PPAddr';
 all_from 'lib/B/Hooks/OP/PPAddr.pm';
 
 requires 'parent';
-configure_requires 'ExtUtils::Depends';
+configure_requires 'ExtUtils::Depends' => 0.302; #minimum version that works on Win32+gcc
 
 my $pkg = ExtUtils::Depends->new('B::Hooks::OP::PPAddr');
 $pkg->install('hook_op_ppaddr.h');
