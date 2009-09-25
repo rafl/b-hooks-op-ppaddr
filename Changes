@@ -1,3 +1,6 @@
+0.04_01  Fri, 25 Sep 2009 17:48:45 +0200
+  * Store static data more safely.
+
 0.03  Tue, 28 Jul 2009 08:14:09 +0200
   * Require ExtUtils::Depends 0.302.
 
