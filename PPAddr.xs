@@ -89,7 +89,12 @@ END ()
 	PREINIT:
 		dMY_CXT;
 	CODE:
+		if (!MY_CXT.op_map) {
+			XSRETURN_EMPTY;
+		}
+
 		PTABLE_free (MY_CXT.op_map);
+		MY_CXT.op_map = NULL;
 
 BOOT:
 	MY_CXT_INIT;
