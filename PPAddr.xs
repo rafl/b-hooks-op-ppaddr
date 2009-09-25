@@ -7,6 +7,14 @@
 
 #include "hook_op_ppaddr.h"
 
+#define MY_CXT_KEY __PACKAGE__ "::_guts" XS_VERSION
+
+typedef struct my_cxt_St {
+	PTABLE_t *op_map;
+} my_cxt_t;
+
+START_MY_CXT
+
 typedef struct userdata_St {
 	hook_op_ppaddr_cb_t cb;
 	void *ud;
@@ -19,23 +27,23 @@ typedef struct around_userdata_St {
 	void *ud;
 } around_userdata_t;
 
-STATIC PTABLE_t *op_map = NULL;
-
 STATIC OP *
 ppaddr_cb (pTHX) {
-	userdata_t *ud = (userdata_t *)PTABLE_fetch(op_map, PL_op);
+	dMY_CXT;
+	userdata_t *ud = (userdata_t *)PTABLE_fetch(MY_CXT.op_map, PL_op);
 	return CALL_FPTR (ud->cb) (aTHX_ PL_op, ud->ud);
 }
 
 void
 hook_op_ppaddr (OP *op, hook_op_ppaddr_cb_t cb, void *user_data) {
+	dMY_CXT;
 	userdata_t *ud;
 
 	Newx (ud, 1, userdata_t);
 	ud->cb = cb;
 	ud->ud = user_data;
 
-	PTABLE_store (op_map, op, ud);
+	PTABLE_store (MY_CXT.op_map, op, ud);
 	op->op_ppaddr = ppaddr_cb;
 }
 
@@ -78,12 +86,15 @@ PROTOTYPES: DISABLE
 
 void
 END ()
+	PREINIT:
+		dMY_CXT;
 	CODE:
-		PTABLE_free (op_map);
+		PTABLE_free (MY_CXT.op_map);
 
 BOOT:
-	op_map = PTABLE_new ();
+	MY_CXT_INIT;
+	MY_CXT.op_map = PTABLE_new ();
 
-	if (!op_map) {
+	if (!MY_CXT.op_map) {
 		croak ("can't initialize op map");
 	}
